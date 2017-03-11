@@ -23,12 +23,14 @@ class MapServer
 
 				def list_map name
 								clnt = HTTPClient.new(default_header: {"User-Agent" => "ioq3", "Referer" => 'ioQ3://urbanterror.info'})
-								if clnt.head("#{@url}#{name}", :follow_redirect => true).status == 200
+								#if clnt.head("#{@url}#{name}", :follow_redirect => true).status == 200
+								if clnt.head("#{@url}#{name}").status == 200
 
 												@maps<<name
 												return true
 								end
-								puts  "#{@name} gave status #{clnt.head("#{@url}#{name}", :follow_redirect => true)}"
+								puts  "#{@name} gave status #{clnt.head("#{@url}#{name}")}"
+								#puts  "#{@name} gave status #{clnt.head("#{@url}#{name}", :follow_redirect => true)}"
 
 								return false
 				end

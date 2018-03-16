@@ -10,100 +10,100 @@ require 'httpclient'
 
 
 class MapServer
-				attr_accessor :url, :name, :maps
-				def initialize(url, maps = [], name = "")
-								@url = url
-								@maps = maps
-								@name = name
-				end
+	attr_accessor :url, :name, :maps
+	def initialize(url, maps = [], name = "")
+		@url = url
+		@maps = maps
+		@name = name
+	end
 
-				def has_map?(name)
-								return @maps.include? name
-				end
+	def has_map?(name)
+		return @maps.include? name
+	end
 
-				def list_map name
-								clnt = HTTPClient.new(default_header: {"User-Agent" => "ioq3", "Referer" => 'ioQ3://urbanterror.info'})
-								#if clnt.head("#{@url}#{name}", :follow_redirect => true).status == 200
-								if clnt.head("#{@url}#{name}").status == 200
+	def list_map name
+		clnt = HTTPClient.new(default_header: {"User-Agent" => "ioq3", "Referer" => 'ioQ3://urbanterror.info'})
+		#if clnt.head("#{@url}#{name}", :follow_redirect => true).status == 200
+		if clnt.head("#{@url}#{name}").status == 200
 
-												@maps<<name
-												return true
-								end
-								puts  "#{@name} gave status #{clnt.head("#{@url}#{name}")}"
-								#puts  "#{@name} gave status #{clnt.head("#{@url}#{name}", :follow_redirect => true)}"
+			@maps<<name
+			return true
+		end
+		puts  "#{@name} gave status #{clnt.head("#{@url}#{name}")}"
+		#puts  "#{@name} gave status #{clnt.head("#{@url}#{name}", :follow_redirect => true)}"
 
-								return false
-				end
+		return false
+	end
 end
 
 
 class MapServerManager
-				attr_reader :servers
-				def initialize(*args)
-								@servers = []
-				end
+	attr_reader :servers
+	def initialize(*args)
+		@servers = []
+	end
 
-				def add_server(server)
-								@servers << server
-				end
+	def add_server(server)
+		@servers << server
+	end
 
-				def find_map name
-
-
-								# Map already listed
-								for s in @servers
-												puts "looking for #{name} in #{s.name}"
-												return s.url if s.has_map? (name)
-								end
-
-								# try to list map
-								for s in servers
-												puts "querying #{s.name} for #{name}"
-
-												if s.list_map(name)
-																puts "found!"
-																return s.url
-												end
-
-								end
-
-								puts "map not found"
-								return nil
-				end
+	def find_map name
 
 
-				def info
-								out = ""
-								@servers.each do |s|
-												out<<	"<h2> #{s.name} (#{s.url}) </h2>"
-												s.maps.each do |m|
-																out << "#{m}<br>"
-												end
-								end
+		# Map already listed
+		for s in @servers
+			puts "looking for #{name} in #{s.name}"
+			return s.url if s.has_map? (name)
+		end
 
-								return out
-				end
+		# try to list map
+		for s in servers
+			puts "querying #{s.name} for #{name}"
+
+			if s.list_map(name)
+				puts "found!"
+				return s.url
+			end
+
+		end
+
+		puts "map not found"
+		return nil
+	end
+
+
+	def info
+		out = ""
+		@servers.each do |s|
+			out<<	"<h2> #{s.name} (#{s.url}) </h2>"
+			s.maps.each do |m|
+				out << "#{m}<br>"
+			end
+		end
+
+		return out
+	end
 end
 
 def run manager
 
-				get	'/' do
-								manager.info
-				end
+	get	'/' do
+		manager.info
+	end
 
-				get '/map/:map' do
+	get '/map/:map' do
 
-								url1 = manager.find_map(params[:map])
+		url1 = manager.find_map(params[:map])
 
-								if url1.nil?
-												"map not found on any server"
-								else
-												puts "rediurectivn"
-												newurl = "#{url1}#{params[:map]}"
-												puts newurl
-												redirect newurl
-								end
-				end
+		if url1.nil?
+			"map not found on any server"
+		else
+			puts "rediurectivn"
+			newurl = "#{url1}#{params[:map]}"
+			puts newurl
+			redirect newurl
+		end
+	end
 end
 
 manager = MapServerManager.new
